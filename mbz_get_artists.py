@@ -38,12 +38,23 @@ if response.status_code == 200:
 
     # Extract track list
     tracks = []
-    for disc in media:
-        for track in disc.get("tracks", []):
-            track_number = track.get("position", 0)
-            track_title = track.get("title", "Unknown Track")
-            artist_names = ", ".join(artist["name"] for artist in track.get("recording", {}).get("artist-credit", []))
-            tracks.append((f"{track_number:02d}", track_title, artist_names)) 
+    for k, release in enumerate(data["releases"]):
+        media = release.get("media", []) 
+        for i, m in enumerate(media):
+            discs = m["discs"]
+            for j, disc in enumerate(discs):
+                found_disc_id= disc.get("id")
+                if debug_mode:
+                    print(f"release {k}, media {i}, disc {j}, id: {d.get("id")}")
+                if found_disc_id == disc_id:
+                    print(f"disc_id found in release {k}, media {i}, disc {j}")
+                    # Extract track list
+                    for track in m.get("tracks", []):
+                        track_number = track.get("position", 0)
+                        track_title = track.get("title", "Unknown Track")
+                        artist_names = ", ".join(artist["name"] for artist in track.get("recording", {}).get("artist-credit", []))
+                        tracks.append((f"{track_number:02d}", track_title, artist_names)) 
+                    break
 
     # DEBUG
     if debug_mode:
