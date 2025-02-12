@@ -45,7 +45,7 @@ if response.status_code == 200:
             for j, disc in enumerate(discs):
                 found_disc_id= disc.get("id")
                 if debug_mode:
-                    print(f"release {k}, media {i}, disc {j}, id: {d.get("id")}")
+                    print(f"release {k}, media {i}, disc {j}, id: {disc.get("id")}")
                 if found_disc_id == disc_id:
                     print(f"disc_id found in release {k}, media {i}, disc {j}")
                     # Extract track list
