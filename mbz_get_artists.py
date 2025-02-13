@@ -87,7 +87,7 @@ for album in albums:
                 for k, disc in enumerate(media['discs']):
                     if disc['id'] == disc_id:
                         if debug_mode:
-                            print(f"release {i}, media {j}, disc {k}, id: {disc.get("id")}")
+                            print(f"{folder} : release {i}, media {j}, disc {k}, id: {disc.get("id")}")
                         for track in media.get("tracks", []):
                             track_number = track.get("position", 0)
                             track_title = track.get("title", "Unknown Track")
@@ -95,6 +95,9 @@ for album in albums:
                             tracks.append((f"{track_number:02d}", track_title, artist_names)) 
                         album_entries.append((album, tracks))
                         break
+                    else:
+                        if debug_mode:
+                            print(f"{folder} : no media found for disc_id: {disc_id}")
         if debug_mode >=3:
             for track_number, track_title, artist_names in tracks:
                 print(f"{track_number} - {track_title} [{artist_names}]")
