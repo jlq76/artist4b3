@@ -7,14 +7,19 @@ import fnmatch
 # Read arguments
 parser = argparse.ArgumentParser(description='Generate a script to rename B3 track files adding artist name based on MusicBrainz data.')
 parser.add_argument('--path', help='Directory containing the discid file and .wav files ot the parent directory')
-parser.add_argument('--debug', action='store_true', help='Enable debug mode (default: off)')
+#parser.add_argument('--debug', action='store_true', help='Enable debug mode (default: off)')
+parser.add_argument("--debug", nargs='?', const=1, type=int, help="Set debug mode. If used alone, debug_mode=1. If used with a value, debug_mode=<value>.")
 parser.add_argument("--like", required=False, help="Pattern to match subfolder names (e.g., 'techno*CD2').")
 
 
 args = parser.parse_args()
 directory = args.path
 folder_like = args.like
-debug_mode = args.debug  
+
+# Set the debug_mode
+debug_mode = args.debug if args.debug is not None else 0
+if debug_mode:
+    print(f"Debug mode: {debug_mode}")
 
 # The script expects either:
 # - a parent folder with subfolders for each album
@@ -39,7 +44,7 @@ else:
 
 if len(subfolders)>0:
     for subfolder in subfolders:
-        if debug_mode:
+        if debug_mode >= 2:
             print(f"Checking subfolder: {subfolder}")
         wav_files=[]
         discid_path = os.path.join(subfolder, 'discid')
@@ -59,7 +64,7 @@ else:
         if disc_id and wav_files:
             albums.append((directory, len(wav_files), disc_id))
             
-if debug_mode:
+if debug_mode >= 2:
     for album in albums:
         folder, wav_count, disc_id = album
         print(f"Album: {folder}, Number of wav files: {wav_count}, disc_id: {disc_id}")
@@ -69,7 +74,7 @@ for album in albums:
     folder, wav_count, disc_id = album
     # Call MusicBrainz API (see https://musicbrainz.org/doc/MusicBrainz_API)
     url = f"https://musicbrainz.org/ws/2/discid/{disc_id}?fmt=json&inc=recordings+artist-credits"
-    if debug_mode:
+    if debug_mode >= 2:
         print(f"Album: {folder}  >>  Calling URL: {url}")
     response = requests.get(url)
     if response.status_code == 200:
@@ -90,6 +95,9 @@ for album in albums:
                             tracks.append((f"{track_number:02d}", track_title, artist_names)) 
                         album_entries.append((album, tracks))
                         break
+        if debug_mode >=3:
+            for track_number, track_title, artist_names in tracks:
+                print(f"{track_number} - {track_title} [{artist_names}]")
 
 rename_commands = []
 for album_entry in album_entries:
