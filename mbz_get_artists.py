@@ -29,7 +29,6 @@ if not os.path.exists(directory):
 
 # Initialize the album  list
 albums = []
-discards= [] #for debug purpose only
 
 # Check for subfolders
 subfolders= []
@@ -40,7 +39,8 @@ else:
 
 if len(subfolders)>0:
     for subfolder in subfolders:
-        print(f"Checking subfolder: {subfolder}")
+        if debug_mode:
+            print(f"Checking subfolder: {subfolder}")
         wav_files=[]
         discid_path = os.path.join(subfolder, 'discid')
         if os.path.isfile(discid_path):
@@ -49,11 +49,7 @@ if len(subfolders)>0:
             wav_files = [f for f in os.listdir(subfolder) if f.endswith('.wav')]
             if disc_id and wav_files:
                 albums.append((subfolder, len(wav_files), disc_id))
-            else:
-                discards.append(subfolder)
-        else:
-            discards.append(subfolder)
-
+                subfolders.remove(subfolder)
 else:
     discid_path = os.path.join(directory, 'discid')
     if os.path.isfile(discid_path):
@@ -62,19 +58,11 @@ else:
         wav_files = [f for f in os.listdir(directory) if f.endswith('.wav')]
         if disc_id and wav_files:
             albums.append((directory, len(wav_files), disc_id))
-        else:
-            discards.append(directory)
-    else:
-        discards.append(directory)
-
+            
 if debug_mode:
     for album in albums:
         folder, wav_count, disc_id = album
         print(f"Album: {folder}, Number of wav files: {wav_count}, disc_id: {disc_id}")
-
-    for discard in discards:
-        print(f"Discarded: {discard}")
-
 
 album_entries=[]
 for album in albums:
@@ -138,7 +126,6 @@ for album_entry in album_entries:
                     print(f'No match: Tried matching "{filename}" against pattern "{pattern.pattern}"')
 
 # create the script file in the target folder
-
 rename_script = os.path.join(directory, "rename_script.sh")
 with open(rename_script, "w", encoding="utf-8") as f:
     f.write("#!/bin/bash\n\n")  
