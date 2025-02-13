@@ -1,8 +1,10 @@
+from datetime import datetime
 import os
 import requests
 import re
 import argparse
 import fnmatch
+
 
 # Define debug level as a global variable
 global_debug_level = 0
@@ -16,6 +18,7 @@ def parse_arguments():
     parser.add_argument('--path', help='Directory containing the discid file and .wav files ot the parent directory')
     parser.add_argument("--debug", nargs='?', const=1, type=int, help="Set debug mode. If used alone, debug level=1. If used with a value, debug level=<value>.")
     parser.add_argument("--like", required=False, help="Pattern to match subfolder names (e.g., 'techno*CD2').")
+    parser.add_argument("--output", help="Name tag for the output script file (will be rename_<output>_timestamp.sh).")
     return parser.parse_args()
 
 # Debug print function
@@ -23,6 +26,12 @@ def debug_print(message_level, message):
     global global_debug_level
     if global_debug_level >= message_level:
         print(message)
+
+# remove any illegal characters from a string intended to be a filename
+def sanitize_filename(filename):
+    pattern = r'[<>:"/\\|?*]'
+    sanitized_filename = re.sub(pattern, '_', filename)
+    return sanitized_filename
 
 # scan the directory given as a parameter
 # parameters:
@@ -93,13 +102,14 @@ def parse_response(response, disc_id, folder):
         for j, media in enumerate(release['media']):
             for k, disc in enumerate(media['discs']):
                 if disc['id'] == disc_id:
-                    debug_print(1, f" >  release {i}, media {j}, disc {k}, id: {disc.get('id')}")
+                    debug_print(2, f" >  release {i}, media {j}, disc {k}, id: {disc.get('id')}")
                     for track in media.get("tracks", []):
                         track_number = track.get("position", 0)
                         track_title = track.get("title", "Unknown Track")
                         artist_names = ", ".join(artist["name"] for artist in track.get("recording", {}).get("artist-credit", []))
                         tracks.append((f"{track_number:02d}", track_title, artist_names))
                         debug_print(3, f"{track_number:02d} {track_title} [{artist_names}]")
+                    debug_print(2, f" >  {len(tracks)} tracks found ")
                     return tracks
     return None
 
@@ -136,8 +146,13 @@ def generate_rename_commands(album_entries):
     return rename_commands
 
 # Create the shell script that contains all the renaming commands
-def create_script(directory, rename_commands):
-    rename_script = os.path.join(directory, "rename_script.sh")
+def create_script(directory, rename_commands, output):
+    
+    output_file= sanitize_filename("rename_" + output)
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    output_file += f"_{timestamp}.sh"
+
+    rename_script = os.path.join(directory, output_file)
     with open(rename_script, "w", encoding="utf-8") as f:
         f.write("#!/bin/bash\n\n")  
         f.write("\n".join(rename_commands))
@@ -147,14 +162,15 @@ def create_script(directory, rename_commands):
 def main():
     global global_debug_level
     args = parse_arguments()
+    global_debug_level = args.debug if args.debug is not None else 0
     directory = args.path
     folder_like = args.like
-    global_debug_level = args.debug if args.debug is not None else 0
+    output = args.output
 
     albums = check_directory(directory, folder_like)    
     album_entries = get_album_data(albums)
     rename_commands = generate_rename_commands(album_entries)
-    create_script(directory, rename_commands)
+    create_script(directory, rename_commands, output)
 
 if __name__ == "__main__":
     main()
