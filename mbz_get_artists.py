@@ -58,6 +58,7 @@ def check_directory(directory, folder_like):
 def check_files(folder):
     discid_path = os.path.join(folder, 'discid')
     wav_files = [f for f in os.listdir(folder) if f.endswith('.wav')]
+    wav_files.sort()
     return (discid_path if os.path.isfile(discid_path) else None, wav_files)
 
 # For a given album, using its disc_id, query the Musicbrainz API to get the track list
