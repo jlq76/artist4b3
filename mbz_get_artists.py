@@ -106,6 +106,7 @@ def generate_rename_commands(album_entries):
         album, tracks = album_entry
         folder, wav_count, disc_id = album
         existing_files = [f for f in os.listdir(folder) if f.lower().endswith(".wav")]
+        existing_files.sort()
         
         rename_commands.append(f"\n# === {folder} === ")
         rename_commands.append(f"#   - {len(existing_files)} wav files")
