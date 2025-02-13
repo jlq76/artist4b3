@@ -2,14 +2,18 @@ import os
 import requests
 import re
 import argparse
+import fnmatch
 
 # Read arguments
 parser = argparse.ArgumentParser(description='Generate a script to rename B3 track files adding artist name based on MusicBrainz data.')
-parser.add_argument('directory', help='Directory containing the discid file and .wav files ot the parent directory')
+parser.add_argument('--path', help='Directory containing the discid file and .wav files ot the parent directory')
 parser.add_argument('--debug', action='store_true', help='Enable debug mode (default: off)')
+parser.add_argument("--like", required=False, help="Pattern to match subfolder names (e.g., 'techno*CD2').")
+
 
 args = parser.parse_args()
-directory = args.directory
+directory = args.path
+folder_like = args.like
 debug_mode = args.debug  
 
 # The script expects either:
@@ -28,28 +32,38 @@ albums = []
 discards= [] #for debug purpose only
 
 # Check for subfolders
-subfolders = [f.path for f in os.scandir(directory) if f.is_dir()]
-if subfolders:
+subfolders= []
+if folder_like:
+    subfolders = [f.path for f in os.scandir(directory) if f.is_dir() and fnmatch.fnmatch(f.name, folder_like)]
+else:
+    subfolders = [f.path for f in os.scandir(directory) if f.is_dir()]
+
+if len(subfolders)>0:
     for subfolder in subfolders:
-        # print(f"Checking subfolder: {subfolder}")
+        print(f"Checking subfolder: {subfolder}")
         wav_files=[]
         discid_path = os.path.join(subfolder, 'discid')
         if os.path.isfile(discid_path):
             with open(discid_path, "r") as file:
                 disc_id = file.readline().strip()
             wav_files = [f for f in os.listdir(subfolder) if f.endswith('.wav')]
-        if disc_id and wav_files:
-            albums.append((subfolder, len(wav_files), disc_id))
+            if disc_id and wav_files:
+                albums.append((subfolder, len(wav_files), disc_id))
+            else:
+                discards.append(subfolder)
         else:
             discards.append(subfolder)
-            
+
 else:
     discid_path = os.path.join(directory, 'discid')
-    with open(discid_path, "r") as file:
-        disc_id = file.readline().strip()
-    wav_files = [f for f in os.listdir(directory) if f.endswith('.wav')]
-    if disc_id and wav_files:
-        albums.append((directory, len(wav_files), disc_id))
+    if os.path.isfile(discid_path):
+        with open(discid_path, "r") as file:
+            disc_id = file.readline().strip()
+        wav_files = [f for f in os.listdir(directory) if f.endswith('.wav')]
+        if disc_id and wav_files:
+            albums.append((directory, len(wav_files), disc_id))
+        else:
+            discards.append(directory)
     else:
         discards.append(directory)
 
