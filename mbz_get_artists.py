@@ -43,7 +43,7 @@ def check_directory(directory, folder_like):
     
     if subfolders:
         for subfolder in subfolders:
-            debug_print(2, f"Checking subfolder: {subfolder}")
+            debug_print(3, f"Checking subfolder: {subfolder}")
             discid_path, wav_files = check_files(subfolder)
             if discid_path and wav_files:
                 albums.append((subfolder, len(wav_files), discid_path))
@@ -69,26 +69,31 @@ def get_album_data(albums):
         with open(discid_path, "r") as file:
             disc_id = file.readline().strip()
         url = f"https://musicbrainz.org/ws/2/discid/{disc_id}?fmt=json&inc=recordings+artist-credits"
-        debug_print(2, f"Album: {folder}  >>  Calling URL: {url}")
-        debug_print(2, f"Album: {folder}, Number of wav files: {wav_count}, disc_id: {disc_id}")
+        debug_print(2, f"\n---- [ {folder} ] ---- \n >  {wav_count} .wav files, disc_id: {disc_id} \n >  Calling URL: {url}")
         response = requests.get(url)
         if response.status_code == 200:
             tracks = parse_response(response, disc_id, folder)
             if tracks:
                 album_entries.append(((folder, wav_count, disc_id), tracks))
+            else:
+                debug_print(2, f" >  ERROR: failed to retrieve data !")
+        else:
+            debug_print(2,f" >  Response Status Code: {response.status_code}")
+            debug_print(2,f" >  Raw response content: {response.text}")
     return album_entries
 
 # Parse the json data returned by the Musibrainz api
 def parse_response(response, disc_id, folder):
     global global_debug_level
     data = response.json()
+    
     tracks = []
     releases = data.get('releases', [])
     for i, release in enumerate(releases):
         for j, media in enumerate(release['media']):
             for k, disc in enumerate(media['discs']):
                 if disc['id'] == disc_id:
-                    debug_print(1, f"{folder} : release {i}, media {j}, disc {k}, id: {disc.get('id')}")
+                    debug_print(1, f" >  release {i}, media {j}, disc {k}, id: {disc.get('id')}")
                     for track in media.get("tracks", []):
                         track_number = track.get("position", 0)
                         track_title = track.get("title", "Unknown Track")
@@ -126,7 +131,7 @@ def generate_rename_commands(album_entries):
                     existing_files.remove(filename)
                     break
                 else:
-                    debug_print(1, f'No match: Tried matching "{filename}" against pattern "{pattern.pattern}"')
+                    debug_print(3, f'No match: Tried matching "{filename}" against pattern "{pattern.pattern}"')
 
     return rename_commands
 
