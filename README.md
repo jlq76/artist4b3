@@ -40,7 +40,11 @@ This approach helps catch potential issues early and allows for adjustments if n
 The B3 cannot run Python directly, so you need to mount its music folder on a machine that supports Python.  
 On Debian, I use `sshfs` to mount the folder:  
 ```sh
+# to mount:
 sshfs root@<ip>:/media/hdd1/music <local_mount_folder>
+
+# to unmount:
+fusermount -u <local_mount_folder>
 ```
 
 ### Running the Script  
@@ -64,6 +68,10 @@ chmod +x rename_filter_20250213204946.sh
 
 ## Example
 ```sh
-python rename_tracks.py --path /path/to/music --debug 2 --like techno* --output my_script
+sshfs root@192.168.86.100:/media/hdd1/music ~/myb3/
+python3 mbz_get_artists.py --path ~/myb3/Various\ Artists/ --debug 2 --like Trancema* --output trancemaster
+chmod +x rename_trancemaster_20250213211223.sh
+./rename_tek_20250213211223.sh
+fusermount -u ~/myb3/
 ```
 
