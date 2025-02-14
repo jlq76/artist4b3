@@ -36,18 +36,21 @@ This approach helps catch potential issues early and allows for adjustments if n
    ```sh
    pip install requests
 
-## Usage
-The B3 cannot run python, it is necessary to mount its folder on a machine that can run python.
-On debian, I'm using sshfs
+## Usage  
+The B3 cannot run Python directly, so you need to mount its music folder on a machine that supports Python.  
+On Debian, I use `sshfs` to mount the folder:  
 ```sh
 sshfs root@<ip>:/media/hdd1/music <local_mount_folder>
 ```
-Run the script with the following options:
+
+### Running the Script  
+Execute the script with the following options:  
 ```sh
 python mbz_get_artists.py --path <path_to_directory> [--debug [level]] [--filter <pattern>] [--output <output_name>]
 ```
 
-The script will generate a shell script that needs to be made executable:
+### Applying the Renaming  
+The script will generate a shell script for renaming the files. Before running it, make it executable:  
 ```sh
 chmod +x rename_filter_20250213204946.sh
 ./rename_filter_20250213204946.sh
