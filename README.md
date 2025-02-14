@@ -24,12 +24,17 @@ The script also includes a filter for subfolder names.
 The B3 cannot run python, it is necessary to mount its folder on a machine that can run python.
 On debian, I'm using sshfs
 ```sh
-sshfs root@<ip>:/media/hdd1/music .<local_mount>
+sshfs root@<ip>:/media/hdd1/music <local_mount_folder>
 ```
-
 Run the script with the following options:
 ```sh
 python mbz_get_artists.py --path <path_to_directory> [--debug [level]] [--filter <pattern>] [--output <output_name>]
+```
+
+The script will generate a shell script that needs to be made executable:
+```sh
+chmod +x rename_filter_20250213204946.sh
+./rename_filter_20250213204946.sh
 ```
 
 ### Arguments
