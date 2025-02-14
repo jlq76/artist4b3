@@ -1,4 +1,4 @@
-# MusicBrainz Track Renamer
+# MusicBrainz Track Renamer for Brennan B3
 
 This Python script automates the renaming of B3 track files by adding the artist's name to the file names based on data fetched from the MusicBrainz API. 
 It scans a specified directory for subfolders containing `.wav` files and `discid` files, retrieves the track information from MusicBrainz, 
