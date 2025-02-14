@@ -41,7 +41,5 @@ python mbz_get_artists.py --path <path_to_directory> [--debug [level]] [--filter
 ## Example
 ```sh
 python rename_tracks.py --path /path/to/music --debug 2 --like techno* --output my_script
-Dependencies
-Python 3.x
 ```
 
