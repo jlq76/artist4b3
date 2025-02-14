@@ -5,39 +5,45 @@ import re
 import argparse
 import fnmatch
 
+"""
+This script automates the renaming of B3 track files by adding the artist's name to the file names 
+based on data fetched from the MusicBrainz API. It scans a specified directory for subfolders 
+containing .wav files and a discid file, retrieves track information from MusicBrainz, 
+generates a series of Bash commands to rename the files, and writes these commands 
+to a shell script with a timestamped filename. 
+
+Arguments:
+    --path: The directory containing the discid file and .wav files, or the parent directory where subfolders should be scanned.
+    --debug: Sets the debug mode. If used alone, debug level is set to 1. If provided with a value, debug level is set accordingly.
+    --filter: A pattern to filter subfolder names (e.g., 'techno*CD2'). Only matching subfolders will be processed.
+    --output: A custom name tag for the output script file. The final script filename will be rename_<output>_<timestamp>.sh.
+"""
 
 # Define debug level as a global variable
 global_debug_level = 0
 
-# Parse arguments
-# Mandatory: --path of the folder to scan
-# Optional:  --debug level (if empty, level=1)
-# Optional:  --like filter of the folder to keep (e.g. Techno*)
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='Generate a script to rename B3 track files adding artist name based on MusicBrainz data.')
-    parser.add_argument('--path', help='Directory containing the discid file and .wav files ot the parent directory')
+    """Parses command-line arguments."""
+    parser = argparse.ArgumentParser(description='Generate a script to rename B3 track files by adding artist names based on MusicBrainz data.')
+    parser.add_argument('--path', help='Directory containing the discid file and .wav files or the parent directory')
     parser.add_argument("--debug", nargs='?', const=1, type=int, help="Set debug mode. If used alone, debug level=1. If used with a value, debug level=<value>.")
-    parser.add_argument("--like", required=False, help="Pattern to match subfolder names (e.g., 'techno*CD2').")
+    parser.add_argument("--filter", required=False, help="Pattern to match subfolder names (e.g., 'Techno*CD*2').")
     parser.add_argument("--output", help="Name tag for the output script file (will be rename_<output>_timestamp.sh).")
     return parser.parse_args()
 
-# Debug print function
 def debug_print(message_level, message):
+    """Prints debug messages based on the set debug level."""
     global global_debug_level
     if global_debug_level >= message_level:
         print(message)
 
-# remove any illegal characters from a string intended to be a filename
 def sanitize_filename(filename):
-    pattern = r'[<>:"/\\|?*]'
-    sanitized_filename = re.sub(pattern, '_', filename)
-    return sanitized_filename
+    """Replaces invalid filename characters with underscores."""
+    return re.sub(r'[<>:"/\\|?*]', '_', filename)
 
-# scan the directory given as a parameter
-# parameters:
-# - directory, mandatory: the path of the folder to scan
-# - folder_like, optional: a name filter of the subfolders to keep
-def check_directory(directory, folder_like):
+
+def check_directory(directory, filter):
+    """Checks the specified directory for valid album subfolders and their contents."""
     global global_debug_level
     if not os.path.exists(directory):
         print(f"Error: Path '{directory}' does not exist.")
@@ -47,7 +53,7 @@ def check_directory(directory, folder_like):
     albums = []
 
     #scan the folders within the current directory (that match the pattern if specified)
-    subfolders = [f.path for f in os.scandir(directory) if f.is_dir() and (not folder_like or fnmatch.fnmatch(f.name, folder_like))]
+    subfolders = [f.path for f in os.scandir(directory) if f.is_dir() and (not filter or fnmatch.fnmatch(f.name, filter))]
     subfolders.sort()
     
     if subfolders:
@@ -63,15 +69,15 @@ def check_directory(directory, folder_like):
     
     return albums
 
-# Check a given folder to extract the disc_id and count the number of wav files
 def check_files(folder):
+    """Checks for the presence of a discid file and .wav files in a given folder."""
     discid_path = os.path.join(folder, 'discid')
     wav_files = [f for f in os.listdir(folder) if f.endswith('.wav')]
     wav_files.sort()
     return (discid_path if os.path.isfile(discid_path) else None, wav_files)
 
-# For a given album, using its disc_id, query the Musicbrainz API to get the track list
 def get_album_data(albums):
+    """Fetches album metadata from MusicBrainz API based on the discid file."""
     global global_debug_level
     album_entries = []
     for folder, wav_count, discid_path in albums:
@@ -91,8 +97,8 @@ def get_album_data(albums):
             debug_print(2,f" >  Raw response content: {response.text}")
     return album_entries
 
-# Parse the json data returned by the Musibrainz api
 def parse_response(response, disc_id, folder):
+    """Parses the MusicBrainz API response to extract track details."""
     global global_debug_level
     data = response.json()
     
@@ -113,8 +119,8 @@ def parse_response(response, disc_id, folder):
                     return tracks
     return None
 
-# Generate the Bash commands to rename each track
 def generate_rename_commands(album_entries):
+    """Generates Bash commands to rename files based on MusicBrainz metadata."""
     global global_debug_level
     rename_commands = []
     for album_entry in album_entries:
@@ -145,9 +151,8 @@ def generate_rename_commands(album_entries):
 
     return rename_commands
 
-# Create the shell script that contains all the renaming commands
 def create_script(directory, rename_commands, output):
-    
+    """Creates a shell script containing the rename commands."""
     output_file= sanitize_filename("rename_" + output)
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
     output_file += f"_{timestamp}.sh"
@@ -158,19 +163,14 @@ def create_script(directory, rename_commands, output):
         f.write("\n".join(rename_commands))
     print(f"Script file created: {rename_script}")
 
-# main
 def main():
     global global_debug_level
     args = parse_arguments()
     global_debug_level = args.debug if args.debug is not None else 0
-    directory = args.path
-    folder_like = args.like
-    output = args.output
-
-    albums = check_directory(directory, folder_like)    
+    albums = check_directory(args.path, args.filter)
     album_entries = get_album_data(albums)
     rename_commands = generate_rename_commands(album_entries)
-    create_script(directory, rename_commands, output)
+    create_script(args.path, rename_commands, args.output)
 
 if __name__ == "__main__":
     main()
