@@ -8,7 +8,7 @@ The B3 enforces a fixed folder structure: `artist/album`.
 While this structure works well for standard artist albums, it presents limitations for compilations. 
 Compilation albums are placed under a `Various Artists` folder, and the individual track files only retain their titles, resulting in the loss of artist information.  
 A common workaround is to manually append the artist name to each track filename, e.g.:  
-```sh
+```bash
 mv "Various Artists/CompilationX/01 first track.wav" "Various Artists/CompilationX/01 first track [artist name].wav"
 ```
 However, this process is tedious when dealing with large collections. 
@@ -29,17 +29,17 @@ This approach helps catch potential issues early and allows for adjustments if n
 
 ## Installation
 1. Clone the repository:
-   ```sh
+   ```bash
    git clone https://github.com/jlq76/artist4b3.git
    
 2. Install the required dependencies:
-   ```sh
+   ```bash
    pip install requests
 
 ## Usage  
 The B3 cannot run Python directly, so you need to mount its music folder on a machine that supports Python.  
 On Debian, I use `sshfs` to mount the folder:  
-```sh
+```bash
 # to mount:
 sshfs root@<ip>:/media/hdd1/music <local_mount_folder>
 
@@ -49,13 +49,13 @@ fusermount -u <local_mount_folder>
 
 ### Running the Script  
 Execute the script with the following options:  
-```sh
+```bash
 python mbz_get_artists.py --path <path_to_directory> [--debug [level]] [--filter <pattern>] [--output <output_name>]
 ```
 
 ### Applying the Renaming  
 The script will generate a shell script for renaming the files. Before running it, make it executable:  
-```sh
+```bash
 chmod +x rename_filter_20250213204946.sh
 ./rename_filter_20250213204946.sh
 ```
@@ -67,7 +67,7 @@ chmod +x rename_filter_20250213204946.sh
   * --output (str): Name tag for the output script file (will be rename_<output>_timestamp.sh) (optional).
 
 ## Example
-```sh
+```bash
 sshfs root@192.168.86.100:/media/hdd1/music ~/myb3/
 python3 mbz_get_artists.py --path ~/myb3/Various\ Artists/ --debug 2 --like Trancema* --output trancemaster
 chmod +x rename_trancemaster_20250213211223.sh
