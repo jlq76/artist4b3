@@ -58,7 +58,7 @@ chmod +x rename_filter_20250213204946.sh
 
 ### Arguments
   * --path (str): Directory containing the discid file and .wav files or the parent directory (mandatory).
-  * --debug (int): Set debug mode. If used alone, debug level = 1. If used with a value, debug level = <value> (optional).
+  * --debug (int): Enable debug mode. If used alone, debug level = 1. If used with a value, debug level = <value> (optional).
   * --filter (str): Pattern to match subfolder names (e.g., 'techno*CD2') (optional).
   * --output (str): Name tag for the output script file (will be rename_<output>_timestamp.sh) (optional).
 
